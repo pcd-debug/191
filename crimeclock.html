@@ -31,6 +31,23 @@
   .btn:hover{background:#f0f3f9}
   .btn.primary{background:var(--brand); border-color:var(--brand); color:#fff}
   .btn.primary:hover{background:var(--brand2)}
+  /* ซ่อน/แสดงแถบเครื่องมือด้านซ้าย */
+  body.side-hidden .sidebar{display:none}
+  /* ข้อความแจ้งเตือนเมื่อแถบด้านซ้ายถูกซ่อน */
+  #toast{position:fixed; top:64px; right:14px; z-index:95; max-width:min(420px, 80vw); display:none}
+  #toast .ok, #toast .err, #toast .info{box-shadow:0 8px 22px rgba(16,24,40,.14)}
+  /* กล่องเลือกสิ่งที่จะดาวน์โหลด PNG */
+  .modal{position:fixed; inset:0; z-index:96; background:rgba(16,24,40,.45); display:flex; align-items:center; justify-content:center; padding:18px}
+  .modal[hidden]{display:none}
+  .modal-card{background:#fff; border:1px solid var(--line); border-radius:14px; box-shadow:0 20px 46px rgba(16,24,40,.30); width:min(470px, 94vw); padding:15px 16px 14px}
+  .modal-title{font-size:15px; font-weight:700; color:var(--brand); margin:0 0 3px}
+  .modal-sub{font-size:12px; color:var(--muted); margin:0 0 11px; line-height:1.6}
+  .opt{display:flex; gap:9px; align-items:flex-start; padding:9px 10px; border:1px solid var(--line); border-radius:9px; cursor:pointer; margin-bottom:7px; font-size:13px; line-height:1.5; background:#fff}
+  .opt:hover{background:#f4f7fd; border-color:#c9d5f5}
+  .opt input{margin:3px 0 0; accent-color:var(--brand); flex:0 0 auto}
+  .opt.is-off{opacity:.45; cursor:not-allowed}
+  .opt.is-off:hover{background:#fff; border-color:var(--line)}
+  .modal-actions{display:flex; justify-content:flex-end; gap:8px; margin-top:12px}
   .layout{display:flex; gap:14px; padding:14px; align-items:flex-start}
   .sidebar{
     width:330px; flex:0 0 330px; background:var(--panel); border:1px solid var(--line);
@@ -70,9 +87,9 @@
   table.symbols input[type=color]{width:34px; height:24px; padding:0; border:1px solid var(--line); background:#fff; border-radius:5px; cursor:pointer}
   #summary{font-size:12.5px; line-height:1.7; background:#f6f8fd; border:1px solid #e6ebf7; border-radius:8px; padding:8px 10px}
   #msg{margin-bottom:10px; font-size:13px}
-  #msg .err{background:#fdecea; border:1px solid #f5c6c2; color:#a02015; padding:8px 10px; border-radius:8px; display:block}
-  #msg .ok{background:#eaf7ee; border:1px solid #bfe6cb; color:#166534; padding:8px 10px; border-radius:8px; display:block}
-  #msg .info{background:#f2f4f8; border:1px solid #dfe4ec; color:#475569; padding:8px 10px; border-radius:8px; display:block}
+  #msg .err, #toast .err{background:#fdecea; border:1px solid #f5c6c2; color:#a02015; padding:8px 10px; border-radius:8px; display:block}
+  #msg .ok, #toast .ok{background:#eaf7ee; border:1px solid #bfe6cb; color:#166534; padding:8px 10px; border-radius:8px; display:block}
+  #msg .info, #toast .info{background:#f2f4f8; border:1px solid #dfe4ec; color:#475569; padding:8px 10px; border-radius:8px; display:block}
   #chart{width:100%; height:auto; display:block}
   .summary-block{margin-top:20px}
   .summary-block .tbl-title{font-size:16px; font-weight:700; color:var(--brand); margin:0 0 10px}
@@ -82,8 +99,9 @@
   table.summary-tbl th.col-name, table.summary-tbl td.col-name{text-align:left}
   table.summary-tbl td.col-total, table.summary-tbl th.col-total{font-weight:700; color:var(--brand)}
   table.summary-tbl tbody tr:nth-child(even){background:#f7f9fd}
-  table.summary-tbl td.col-name span{vertical-align:middle}
-  table.summary-tbl .glyphbox{vertical-align:middle; margin-right:7px}
+  /* สัญลักษณ์อยู่บรรทัดเดียวกับชื่อเหตุ */
+  table.summary-tbl td.col-name span{display:inline-block; vertical-align:middle}
+  table.summary-tbl .glyphbox{display:inline-block; vertical-align:middle; margin:0 7px 0 0}
   #empty{display:none; padding:70px 20px; text-align:center; color:var(--muted); font-size:15px}
   details.ghost{margin-top:6px}
   details.ghost summary{cursor:pointer; font-size:12.5px; color:var(--brand)}
@@ -115,6 +133,7 @@
     <small>แสดงการเกิดเหตุตามเวลา 24 ชั่วโมง · แบ่งชั้นตามพื้นที่รับผิดชอบ</small>
   </div>
   <div class="actions">
+    <button class="btn" id="btnSide" title="ซ่อนหรือแสดงแถบเครื่องมือด้านซ้าย" aria-pressed="false">☰ ซ่อนแถบ</button>
     <label class="btn primary">⬆ อัปโหลดไฟล์ .xlsx<input type="file" id="fileInput" accept=".xlsx,.xlsm,.xls,.csv" hidden></label>
     <button class="btn" id="btnPng">⬇ ดาวน์โหลด PNG</button>
     <button class="btn" id="btnPrint" title="พิมพ์หรือบันทึก PDF ขนาด A4 แนวตั้ง พอดี 1 แผ่น">🖨 พิมพ์ / PDF (A4 · 1 แผ่น)</button>
@@ -168,16 +187,6 @@
       </div>
       <div id="symTable"></div>
     </section>
-
-    <section class="block">
-      <h3 class="blocktitle">รูปแบบไฟล์ PNG</h3>
-      <div class="radios">
-        <label><input type="radio" name="pngLayout" value="tall" checked>
-          <span><b>ภาพเดียว (ผัง + ตาราง)</b> — รวมเป็นไฟล์เดียวสูงต่อเนื่องกัน</span></label>
-        <label><input type="radio" name="pngLayout" value="split">
-          <span><b>แยก 2 ไฟล์</b> — ได้ไฟล์ผังนาฬิกา และไฟล์ตารางสรุปแยกกัน</span></label>
-      </div>
-    </section>
   </aside>
 
   <main class="main">
@@ -190,6 +199,29 @@
 <div id="shapePop" class="shape-pop no-print" hidden>
   <div class="pop-title">เลือกสัญลักษณ์ (รูปทรง) ประจำเหตุ</div>
   <div class="pop-grid" id="shapePopGrid"></div>
+</div>
+
+<div id="toast" class="no-print"></div>
+
+<div id="pngModal" class="modal no-print" hidden>
+  <div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="pngModalTitle">
+    <h3 class="modal-title" id="pngModalTitle">⬇ เลือกสิ่งที่จะดาวน์โหลดเป็น PNG</h3>
+    <p class="modal-sub">เลือกได้ว่าต้องการเฉพาะผังนาฬิกา หรือเฉพาะตารางสรุป หรือทั้งสองอย่าง</p>
+    <div id="pngOpts">
+      <label class="opt" data-v="chart"><input type="radio" name="pngWhat" value="chart">
+        <span><b>ผังนาฬิกา</b> — ผังวงกลม 24 ชั่วโมง อย่างเดียว</span></label>
+      <label class="opt" data-v="table"><input type="radio" name="pngWhat" value="table">
+        <span><b>ตารางสรุป</b> — ตารางสรุปจำนวนเหตุตามช่วงเวลา อย่างเดียว</span></label>
+      <label class="opt" data-v="both"><input type="radio" name="pngWhat" value="both">
+        <span><b>ผัง + ตาราง (ไฟล์เดียว)</b> — ต่อกันเป็นภาพเดียวสูงต่อเนื่องกัน</span></label>
+      <label class="opt" data-v="split"><input type="radio" name="pngWhat" value="split">
+        <span><b>ผัง + ตาราง (แยก 2 ไฟล์)</b> — ได้สองไฟล์คนละไฟล์กัน</span></label>
+    </div>
+    <div class="modal-actions">
+      <button class="btn" id="pngCancel">ยกเลิก</button>
+      <button class="btn primary" id="pngGo">⬇ ดาวน์โหลด</button>
+    </div>
+  </div>
 </div>
 
 <script>
@@ -1110,9 +1142,60 @@ Array.prototype.forEach.call(document.querySelectorAll('input[name=mode]'), func
   r.addEventListener('change', function(){ if(r.checked){ state.mode = r.value; render(); } });
 });
 
-var pngLayout = 'tall';
-Array.prototype.forEach.call(document.querySelectorAll('input[name=pngLayout]'), function(r){
-  r.addEventListener('change', function(){ if(r.checked) pngLayout = r.value; });
+/* ===== ปุ่มซ่อน/แสดงแถบเครื่องมือด้านซ้าย ===== */
+document.getElementById('btnSide').addEventListener('click', function(){
+  var hidden = document.body.classList.toggle('side-hidden');
+  this.textContent = hidden ? '☰ แสดงแถบ' : '☰ ซ่อนแถบ';
+  this.setAttribute('aria-pressed', hidden ? 'true' : 'false');
+});
+
+/* ===== เลือกสิ่งที่จะดาวน์โหลด PNG ตอนกดปุ่ม (แทนตัวเลือกในแถบด้านซ้าย) ===== */
+var pngChoice = 'both';
+var pngModal = document.getElementById('pngModal');
+var PNG_MSG = {
+  chart: 'บันทึกไฟล์ PNG แล้ว (ผังนาฬิกา)',
+  table: 'บันทึกไฟล์ PNG แล้ว (ตารางสรุป)',
+  both: 'บันทึกไฟล์ PNG แล้ว (ผังนาฬิกา + ตารางสรุป)',
+  split: 'บันทึกไฟล์ PNG แล้ว 2 ไฟล์ (ผังนาฬิกา · ตารางสรุป)'
+};
+
+function syncPngOptions(){
+  var hasTable = summaryRows.length > 0;
+  Array.prototype.forEach.call(pngModal.querySelectorAll('.opt'), function(lb){
+    var off = !hasTable && lb.getAttribute('data-v') !== 'chart';
+    lb.classList.toggle('is-off', off);
+    lb.querySelector('input').disabled = off;
+  });
+  if(!hasTable) pngChoice = 'chart';
+  var cur = pngModal.querySelector('input[name=pngWhat][value="' + pngChoice + '"]');
+  if(!cur || cur.disabled){
+    cur = pngModal.querySelector('input[name=pngWhat]:not([disabled])');
+    if(cur) pngChoice = cur.value;
+  }
+  if(cur) cur.checked = true;
+}
+
+function openPngModal(){
+  syncPngOptions();
+  pngModal.hidden = false;
+  var first = pngModal.querySelector('input[name=pngWhat]:not([disabled])');
+  if(first) first.focus();
+}
+
+function closePngModal(){ pngModal.hidden = true; }
+
+document.getElementById('btnPng').addEventListener('click', openPngModal);
+document.getElementById('pngCancel').addEventListener('click', closePngModal);
+pngModal.addEventListener('click', function(e){ if(e.target === pngModal) closePngModal(); });
+pngModal.addEventListener('change', function(e){
+  if(e.target && e.target.name === 'pngWhat' && e.target.checked) pngChoice = e.target.value;
+});
+document.addEventListener('keydown', function(e){ if(e.key === 'Escape' && !pngModal.hidden) closePngModal(); });
+
+document.getElementById('pngGo').addEventListener('click', function(){
+  var choice = pngChoice;
+  closePngModal();
+  exportPng(choice);
 });
 
 function refreshSymbolUI(name){
@@ -1211,6 +1294,18 @@ document.getElementById('symReset').addEventListener('click', function(){
 
 function showMsg(text, kind){
   document.getElementById('msg').innerHTML = text ? '<span class="' + kind + '">' + text + '</span>' : '';
+  /* เมื่อแถบด้านซ้ายถูกซ่อน ให้แจ้งเตือนทางมุมขวาบนแทน */
+  var toast = document.getElementById('toast');
+  if(!toast) return;
+  clearTimeout(showMsg._t);
+  if(!text || !document.body.classList.contains('side-hidden')){
+    toast.innerHTML = '';
+    toast.style.display = 'none';
+    return;
+  }
+  toast.innerHTML = '<span class="' + kind + '">' + text + '</span>';
+  toast.style.display = 'block';
+  showMsg._t = setTimeout(function(){ toast.innerHTML = ''; toast.style.display = 'none'; }, 4000);
 }
 
 document.getElementById('fileInput').addEventListener('change', async function(e){
@@ -1260,7 +1355,7 @@ function downloadCanvas(canvas, filename){
   });
 }
 
-document.getElementById('btnPng').addEventListener('click', function(){
+function exportPng(choice){
   var svg = document.getElementById('chart');
   if(!svg.innerHTML){ showMsg('ยังไม่มีข้อมูลให้บันทึก', 'err'); return; }
   var clone = svg.cloneNode(true);
@@ -1270,7 +1365,9 @@ document.getElementById('btnPng').addEventListener('click', function(){
 
   var vb = (svg.getAttribute('viewBox') || '0 0 1440 1944').split(/\s+/).map(Number);
   var cw = vb[2] || 1440, chh = vb[3] || 1944;
-  var tableObj = summaryRows.length ? buildSummarySvg(summaryRows, cw) : null;
+  var wantTable = (choice === 'table' || choice === 'both' || choice === 'split');
+  if(wantTable && !summaryRows.length){ showMsg('ยังไม่มีตารางสรุปให้บันทึก', 'err'); return; }
+  var tableObj = wantTable ? buildSummarySvg(summaryRows, cw) : null;
   var scale = 2;
 
   var jobs = [loadSvgImage(chartXml)];
@@ -1279,18 +1376,26 @@ document.getElementById('btnPng').addEventListener('click', function(){
   Promise.all(jobs).then(function(imgs){
     var clockImg = imgs[0];
     var tableImg = tableObj ? imgs[1] : null;
-    var downloads;
+    var downloads = [];
 
-    if(pngLayout === 'split' && tableObj){
+    if(choice === 'table'){
+      /* เฉพาะตารางสรุป */
+      var ct = makeCanvas(cw * scale, tableObj.H * scale);
+      ct.ctx.drawImage(tableImg, 0, 0, cw * scale, tableObj.H * scale);
+      downloads.push({canvas: ct.canvas, name: 'นาฬิกาอาชญากรรม-ตาราง.png'});
+    } else if(choice === 'chart'){
+      /* เฉพาะผังนาฬิกา */
+      var cc = makeCanvas(cw * scale, chh * scale);
+      cc.ctx.drawImage(clockImg, 0, 0, cw * scale, chh * scale);
+      downloads.push({canvas: cc.canvas, name: 'นาฬิกาอาชญากรรม.png'});
+    } else if(choice === 'split'){
       /* สองไฟล์แยกกัน : ผังนาฬิกา และ ตารางสรุป */
       var c1 = makeCanvas(cw * scale, chh * scale);
       c1.ctx.drawImage(clockImg, 0, 0, cw * scale, chh * scale);
       var c2 = makeCanvas(cw * scale, tableObj.H * scale);
       c2.ctx.drawImage(tableImg, 0, 0, cw * scale, tableObj.H * scale);
-      downloads = [
-        {canvas: c1.canvas, name: 'นาฬิกาอาชญากรรม-ผัง.png'},
-        {canvas: c2.canvas, name: 'นาฬิกาอาชญากรรม-ตาราง.png'}
-      ];
+      downloads.push({canvas: c1.canvas, name: 'นาฬิกาอาชญากรรม-ผัง.png'});
+      downloads.push({canvas: c2.canvas, name: 'นาฬิกาอาชญากรรม-ตาราง.png'});
     } else {
       /* ไฟล์เดียว : ผังนาฬิกา + ตารางสรุปต่อกัน */
       var gap = tableObj ? 34 : 0;
@@ -1308,7 +1413,7 @@ document.getElementById('btnPng').addEventListener('click', function(){
         c.ctx.stroke();
         c.ctx.drawImage(tableImg, 0, (chh + gap) * scale, cw * scale, tableObj.H * scale);
       }
-      downloads = [{canvas: c.canvas, name: 'นาฬิกาอาชญากรรม.png'}];
+      downloads.push({canvas: c.canvas, name: 'นาฬิกาอาชญากรรม.png'});
     }
 
     var okAll = true;
@@ -1318,12 +1423,10 @@ document.getElementById('btnPng').addEventListener('click', function(){
       });
     }, Promise.resolve()).then(function(){
       if(!okAll){ showMsg('สร้างไฟล์ PNG ไม่สำเร็จ', 'err'); return; }
-      showMsg(downloads.length === 2
-        ? 'บันทึกไฟล์ PNG แล้ว 2 ไฟล์ (ผังนาฬิกา · ตารางสรุป)'
-        : (tableObj ? 'บันทึกไฟล์ PNG แล้ว (ผังนาฬิกา + ตารางสรุป)' : 'บันทึกไฟล์ PNG แล้ว'), 'ok');
+      showMsg(PNG_MSG[choice] || PNG_MSG.both, 'ok');
     });
   }).catch(function(){ showMsg('สร้างไฟล์ PNG ไม่สำเร็จ', 'err'); });
-});
+}
 
 /* ================= โหลดไฟล์อัตโนมัติ (สำหรับทดสอบระบบ) ================= */
 /* เปิดหน้าเว็บแล้วระบบจะดึงไฟล์นี้จากโฟลเดอร์เดียวกันมาแสดงเองอัตโนมัติ
